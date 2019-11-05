@@ -324,6 +324,15 @@ RUN conda install --quiet --yes \
 
 USER root 
 
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+                libapparmor1 \
+                libedit2 \
+                lsb-release \
+                psmisc \
+                libssl1.0.0 \
+                ;
+
 ENV RSTUDIO_PKG=rstudio-server-1.0.136-amd64.deb
 
 RUN wget -q http://download2.rstudio.org/${RSTUDIO_PKG}
