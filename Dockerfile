@@ -41,6 +41,9 @@ ENV PATH=$CONDA_DIR/bin:$PATH \
 # Add a script that we will use to correct permissions after running certain commands
 ADD fix-permissions /usr/local/bin/fix-permissions
 
+#Edit to original to make fix-permission executable
+RUN chmod +x /usr/local/bin/fix-permissions
+
 # Enable prompt color in the skeleton .bashrc before creating the default NB_USER
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
 
