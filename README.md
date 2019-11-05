@@ -1,2 +1,2 @@
 # docker-stacks
-Jupyter Notebook Docker-Stack for DSP
+JupyterLab Docker-Stack for DSP
