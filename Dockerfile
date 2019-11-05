@@ -345,6 +345,7 @@ ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/
 ### Might need to conda pip install from git to get latest version
 RUN conda install -c conda-forge jupyterlab-git && \
     jupyter lab build
+#RUN pip install git+https://github.com/jupyterlab/jupyterlab-git
 ### End install jupyterlab-git
 
 COPY ./MandatorySharedGPUCode.ipynb $HOME
