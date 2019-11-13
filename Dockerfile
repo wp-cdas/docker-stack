@@ -333,9 +333,9 @@ RUN apt-get update && \
                 libssl1.0.0 \
                 ;
 
-ENV RSTUDIO_PKG=rstudio-server-1.0.136-amd64.deb
+ENV RSTUDIO_PKG=rstudio-server-1.2.5019-amd64.deb
 
-RUN wget -q http://download2.rstudio.org/${RSTUDIO_PKG}
+RUN wget -q http://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG}
 RUN dpkg -i ${RSTUDIO_PKG}
 RUN rm ${RSTUDIO_PKG}
 
