@@ -331,6 +331,7 @@ RUN apt-get update && \
                 lsb-release \
                 psmisc \
                 libssl1.0.0 \
+                libclang-dev \
                 ;
 
 ENV RSTUDIO_PKG=rstudio-server-1.2.5019-amd64.deb
