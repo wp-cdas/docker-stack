@@ -101,7 +101,7 @@ RUN conda install --quiet --yes 'tini=0.18.0' && \
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
 RUN conda install --quiet --yes \
-    'notebook=6.0.0' \
+    'notebook=6.0.1' \
     'jupyterhub=1.0.0' \
     'jupyterlab=1.2.1' && \
     conda clean --all -f -y && \
@@ -242,7 +242,7 @@ RUN apt-get update && \
 # install Julia packages in /opt/julia instead of $HOME
 ENV JULIA_DEPOT_PATH=/opt/julia
 ENV JULIA_PKGDIR=/opt/julia
-ENV JULIA_VERSION=1.2.0
+ENV JULIA_VERSION=1.3.0
 
 RUN mkdir /opt/julia-${JULIA_VERSION} && \
     cd /tmp && \
