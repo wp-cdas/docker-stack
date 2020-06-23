@@ -12,6 +12,13 @@ c.NotebookApp.ip = '0.0.0.0'
 c.NotebookApp.port = 8888
 c.NotebookApp.open_browser = False
 
+# shutdown the server after no activity for two hours
+c.NotebookApp.shutdown_no_activity_timeout = 2 * 60 * 60
+# shutdown kernels after no activity for 60 minutes
+c.MappingKernelManager.cull_idle_timeout = 60 * 60
+# check for idle kernels every two minutes
+c.MappingKernelManager.cull_interval = 2 * 60
+
 # https://github.com/jupyter/notebook/issues/3130
 c.FileContentsManager.delete_to_trash = False
 

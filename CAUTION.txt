@@ -1,1 +1,3 @@
 Please understand that no files will persist in this workspace after you exit.  Utilize GitHub or some other means of saving your work and save frequently.
+
+Large-file storage (LFS) is available at "/lfs".  This directory is like the wild west of file directories though: everyone has access to all files in the directory. Delete, move, edit... everything goes.
