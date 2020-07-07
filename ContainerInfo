@@ -1,3 +1,4 @@
 cdasdsp/datasci-rstudio-notebook
 Version 4 as of 24 Jan
 Version 5 as of 23 Jun (Update all package numbers)
+Version 6 as of 7 July (Install RSTAN, TMB, and INLA packages for R)

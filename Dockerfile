@@ -57,34 +57,37 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     chown $NB_USER:$NB_GID $CONDA_DIR && \
     chmod g+w /etc/passwd && \
     fix-permissions $HOME && \
-    fix-permissions "$(dirname $CONDA_DIR)"
+    fix-permissions $CONDA_DIR
 
 USER $NB_UID
 WORKDIR $HOME
+ARG PYTHON_VERSION=default
 
 # Setup work directory for backward-compatibility
 RUN mkdir /home/$NB_USER/work && \
     fix-permissions /home/$NB_USER
 
 # Install conda as jovyan and check the md5 sum provided on the download site
-#ENV MINICONDA_VERSION=4.6.14 \
-#    CONDA_VERSION=4.7.10
+# Install conda as jovyan and check the md5 sum provided on the download site
+ENV MINICONDA_VERSION=4.8.2 \
+    MINICONDA_MD5=87e77f097f6ebb5127c77662dfc3165e \
+    CONDA_VERSION=4.8.2
 
-ENV MINICONDA_VERSION=4.7.12.1 \
-    CONDA_VERSION=4.8.3
-
-RUN cd /tmp && \
-    wget --quiet https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
-#    echo "23bf3acd6aead6e91fb936fc185b033e *Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
-    /bin/bash Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
-    rm Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
+WORKDIR /tmp
+RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    echo "${MINICONDA_MD5} *Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
+    /bin/bash Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
+    rm Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh && \
     echo "conda ${CONDA_VERSION}" >> $CONDA_DIR/conda-meta/pinned && \
-    $CONDA_DIR/bin/conda config --system --prepend channels conda-forge && \
-    $CONDA_DIR/bin/conda config --system --set auto_update_conda false && \
-    $CONDA_DIR/bin/conda config --system --set show_channel_urls true && \
-    $CONDA_DIR/bin/conda install --quiet --yes conda && \
-    $CONDA_DIR/bin/conda update --all --quiet --yes && \
+    conda config --system --prepend channels conda-forge && \
+    conda config --system --set auto_update_conda false && \
+    conda config --system --set show_channel_urls true && \
+    conda config --system --set channel_priority strict && \
+    if [ ! $PYTHON_VERSION = 'default' ]; then conda install --yes python=$PYTHON_VERSION; fi && \
     conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> $CONDA_DIR/conda-meta/pinned && \
+    conda install --quiet --yes conda && \
+    conda install --quiet --yes pip && \
+    conda update --all --quiet --yes && \
     conda clean --all -f -y && \
     rm -rf /home/$NB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
@@ -104,11 +107,9 @@ RUN conda install --quiet --yes 'tini=0.18.0' && \
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
 RUN conda install --quiet --yes \
-    'notebook=6.0.1' \
-#    'jupyterlab=1.0.0' && \
+    'notebook=6.0.3' \
     'jupyterhub=1.1.0' \
-#    'jupyterlab=1.2.1' && \
-    'jupyterlab=1.2.*' && \
+    'jupyterlab=2.1.3' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     jupyter notebook --generate-config && \
@@ -116,12 +117,6 @@ RUN conda install --quiet --yes \
     rm -rf /home/$NB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
-
-EXPOSE 8888
-
-# Configure container startup
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.sh"]
 
 # Add local files as late as possible to avoid cache busting
 COPY start.sh /usr/local/bin/
@@ -141,7 +136,8 @@ USER root
 # Install all OS dependencies for fully functional notebook server
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     build-essential \
-    emacs \
+    emacs-nox \
+    vim-tiny \
     git \
     inkscape \
     jed \
@@ -150,24 +146,29 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libxrender1 \
     lmodern \
     netcat \
-    pandoc \
     python-dev \
-    texlive-fonts-extra \
-    texlive-fonts-recommended \
-    texlive-generic-recommended \
-    texlive-latex-base \
-    texlive-latex-extra \
+    # ---- nbconvert dependencies ----
     texlive-xetex \
+    texlive-fonts-recommended \
+    texlive-plain-generic \
+    # Optional dependency
+    texlive-fonts-extra \
+    # ----
     tzdata \
     unzip \
     nano \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Switch back to jovyan to avoid accidental container runs as root
+USER $NB_UID
 ### End jupyter/minimal-notebook
 
 ### Start jupyter/scipy-notebook
-# ffmpeg for matplotlib anim
+USER root
+
+# ffmpeg for matplotlib anim & dvipng for latex labels
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg dvipng && \
     rm -rf /var/lib/apt/lists/*
 
 USER $NB_UID
@@ -176,32 +177,34 @@ USER $NB_UID
 RUN conda install --quiet --yes \
     'beautifulsoup4=4.9.*' \
     'conda-forge::blas=*=openblas' \
-    'bokeh=2.1.*' \
+    'bokeh=2.0.*' \
+    'bottleneck=1.3.*' \
     'cloudpickle=1.4.*' \
     'cython=0.29.*' \
-    'dask=2.19.*' \
+    'dask=2.15.*' \
     'dill=0.3.*' \
     'h5py=2.10.*' \
-    'hdf5=1.10*' \
+    'hdf5=1.10.*' \
     'ipywidgets=7.5.*' \
+    'ipympl=0.5.*'\
     'matplotlib-base=3.2.*' \
-    'numba=0.49.*' \
+    # numba update to 0.49 fails resolving deps.
+    'numba=0.48.*' \
     'numexpr=2.7.*' \
     'pandas=1.0.*' \
     'patsy=0.5.*' \
-    'protobuf=3.12.*' \
-    'scikit-image=0.17.*' \
-    'scikit-learn=0.23.*' \
+    'protobuf=3.11.*' \
+    'pytables=3.6.*' \
+    'scikit-image=0.16.*' \
+    'scikit-learn=0.22.*' \
     'scipy=1.4.*' \
     'seaborn=0.10.*' \
     'sqlalchemy=1.3.*' \
     'statsmodels=0.11.*' \
-    'sympy=1.6' \
+    'sympy=1.5.*' \
     'vincent=0.4.*' \
+    'widgetsnbextension=3.5.*'\
     'xlrd=1.2.*' \
-    'pycocotools=2.0.*' \
-    'imgaug=0.4.*' \
-    'numpy=1.18.*' \
     && \
     conda clean --all -f -y && \
     # Activate ipywidgets extension in the environment that runs the notebook server
@@ -209,33 +212,41 @@ RUN conda install --quiet --yes \
     # Also activate ipywidgets extension for JupyterLab
     # Check this URL for most recent compatibilities
     # https://github.com/jupyter-widgets/ipywidgets/tree/master/packages/jupyterlab-manager
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager@^1.0.1 --no-build && \
-    jupyter labextension install jupyterlab_bokeh@1.0.0 --no-build && \
-    jupyter lab build --dev-build=False && \
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager@^2.0.0 --no-build && \
+    jupyter labextension install @bokeh/jupyter_bokeh@^2.0.0 --no-build && \
+    jupyter labextension install jupyter-matplotlib@^0.7.2 --no-build && \
+    jupyter lab build -y && \
+    jupyter lab clean -y && \
     npm cache clean --force && \
-    rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
-    rm -rf /home/$NB_USER/.cache/yarn && \
-    rm -rf /home/$NB_USER/.node-gyp && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    rm -rf "/home/${NB_USER}/.cache/yarn" && \
+    rm -rf "/home/${NB_USER}/.node-gyp" && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
 
 # Install facets which does not have a pip or conda package at the moment
-RUN cd /tmp && \
-    git clone https://github.com/PAIR-code/facets.git && \
-    cd facets && \
-    jupyter nbextension install facets-dist/ --sys-prefix && \
-    cd && \
+WORKDIR /tmp
+RUN git clone https://github.com/PAIR-code/facets.git && \
+    jupyter nbextension install facets/facets-dist/ --sys-prefix && \
     rm -rf /tmp/facets && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
 
 # Import matplotlib the first time to build the font cache.
-ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
+ENV XDG_CACHE_HOME="/home/${NB_USER}/.cache/"
+
 RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot" && \
-    fix-permissions /home/$NB_USER
+    fix-permissions "/home/${NB_USER}"
+
+USER $NB_UID
+
+WORKDIR $HOME
 ### End jupyter/scipy-notebook
 
 ### Start jupyter/datascience-notebook
+
+# Fix DL4006
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 USER root
 
 # R pre-requisites
@@ -250,53 +261,53 @@ RUN apt-get update && \
 # install Julia packages in /opt/julia instead of $HOME
 ENV JULIA_DEPOT_PATH=/opt/julia
 ENV JULIA_PKGDIR=/opt/julia
-ENV JULIA_VERSION=1.4.2
+ENV JULIA_VERSION=1.4.1
 
-RUN mkdir /opt/julia-${JULIA_VERSION} && \
-    cd /tmp && \
-    wget -q https://julialang-s3.julialang.org/bin/linux/x64/`echo ${JULIA_VERSION} | cut -d. -f 1,2`/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
-#    echo "f47a3782dc507740b299babfe989bbc7 julia-1.4.2-linux-x86_64.tar.gz" | sha256sum -c - && \
-    tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
-    rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+WORKDIR /tmp
+
+# hadolint ignore=SC2046
+RUN mkdir "/opt/julia-${JULIA_VERSION}" && \
+    wget -q https://julialang-s3.julialang.org/bin/linux/x64/$(echo "${JULIA_VERSION}" | cut -d. -f 1,2)"/julia-${JULIA_VERSION}-linux-x86_64.tar.gz" && \
+    echo "fd6d8cadaed678174c3caefb92207a3b0e8da9f926af6703fb4d1e4e4f50610a *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
+    tar xzf "julia-${JULIA_VERSION}-linux-x86_64.tar.gz" -C "/opt/julia-${JULIA_VERSION}" --strip-components=1 && \
+    rm "/tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz"
 RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
 
 # Show Julia where conda libraries are \
 RUN mkdir /etc/julia && \
     echo "push!(Libdl.DL_LOAD_PATH, \"$CONDA_DIR/lib\")" >> /etc/julia/juliarc.jl && \
     # Create JULIA_PKGDIR \
-    mkdir $JULIA_PKGDIR && \
-    chown $NB_USER $JULIA_PKGDIR && \
-    fix-permissions $JULIA_PKGDIR
+    mkdir "${JULIA_PKGDIR}" && \
+    chown "${NB_USER}" "${JULIA_PKGDIR}" && \
+    fix-permissions "${JULIA_PKGDIR}"
 
 USER $NB_UID
 
 # R packages including IRKernel which gets installed globally.
 RUN conda install --quiet --yes \
-    'r-base=3.6.1' \
+    'r-base=3.6.3' \
     'r-caret=6.0*' \
-    'r-crayon=1.3.*' \
-    'r-devtools=2.0.' \
+    'r-crayon=1.3*' \
+    'r-devtools=2.3*' \
     'r-forecast=8.12*' \
-    'r-hexbin=1.27.*' \
-    'r-htmltools=0.3.*' \
-    'r-htmlwidgets=1.3*' \
-    'r-irkernel=0.8.*' \
-    'r-nycflights13=1.0.*' \
-    'r-plyr=1.8.*' \
+    'r-hexbin=1.28*' \
+    'r-htmltools=0.4*' \
+    'r-htmlwidgets=1.5*' \
+    'r-irkernel=1.1*' \
+    'r-nycflights13=1.0*' \
+    'r-plyr=1.8*' \
     'r-randomforest=4.6*' \
     'r-rcurl=1.98*' \
-    'r-reshape2=1.4.*' \
-    'r-rmarkdown=1.12*' \
-    'r-rsqlite=2.2.*' \
-    'r-shiny=1.3.*' \
-    'r-sparklyr=1.2.*' \
-    'r-tidyverse=1.2.*' \
-    'rpy2=2.9.*' \
-    'r-rtweet=0.7.*' \
+    'r-reshape2=1.4*' \
+    'r-rmarkdown=2.1*' \
+    'r-rsqlite=2.2*' \
+    'r-shiny=1.4*' \
+    'r-tidyverse=1.3*' \
+    'rpy2=3.1*' \
     && \
     conda clean --all -f -y && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
 
 # Add Julia packages. Only add HDF5 if this is not a test-only build since
 # it takes roughly half the entire build time of all of the images on Travis
@@ -307,12 +318,14 @@ RUN conda install --quiet --yes \
 # taking effect properly on the .local folder in the jovyan home dir.
 RUN julia -e 'import Pkg; Pkg.update()' && \
     (test $TEST_ONLY_BUILD || julia -e 'import Pkg; Pkg.add("HDF5")') && \
-    julia -e "using Pkg; pkg\"add IJulia\"; pkg\"precompile\"" && \ 
+    julia -e "using Pkg; pkg\"add IJulia\"; pkg\"precompile\"" && \
     # move kernelspec out of home \
-    mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernels/ && \
-    chmod -R go+rx $CONDA_DIR/share/jupyter && \
-    rm -rf $HOME/.local && \
-    fix-permissions $JULIA_PKGDIR $CONDA_DIR/share/jupyter
+    mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
+    chmod -R go+rx "${CONDA_DIR}/share/jupyter" && \
+    rm -rf "${HOME}/.local" && \
+    fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter"
+
+WORKDIR $HOME
 
 ### End jupyter/datascience-notebook
 
@@ -320,13 +333,22 @@ RUN julia -e 'import Pkg; Pkg.update()' && \
 # Install Tensorflow
 USER $NB_UID
 
-RUN conda install --quiet --yes \
-    'tensorflow-gpu=2.2.*' \
-    'keras=2.3.*' && \
-    conda clean --all -f -y && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
-### End install tensorflow
+#RUN conda install --quiet --yes \
+#    'tensorflow-gpu=2.2.*' \
+#    'keras=2.3.*' && \
+#    conda clean --all -f -y && \
+#    fix-permissions $CONDA_DIR && \
+#    fix-permissions /home/$NB_USER
+#
+
+RUN pip install --quiet --no-cache-dir \
+    'tensorflow-gpu==2.2.*' \
+    'keras==2.3.*' && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+
+## End install tensorflow
 
 ### Install RStudio Server and supporting proxy
 # You can use rsession from rstudio's desktop package as well.
@@ -352,12 +374,6 @@ RUN rm ${RSTUDIO_PKG}
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-### Begin install MATLAB kernel
-
-RUN pip install matlab_kernel && \
-    python -m matlab_kernel install
-
-#### End install MATLAB kernel
 
 USER $NB_USER
 
@@ -375,6 +391,20 @@ ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/
 
 ### End install RStudio Server
 
+### Octave Install
+RUN conda install --quiet --yes \
+    'octave_kernel' && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+### End install Octave
+
+
+### Begin install MATLAB kernel
+## MATLAB doesn't play nice because of licenses. Project for another time.
+#RUN pip install --user matlab_kernel
+
+#### End install MATLAB kernel
 
 ### Install jupyterlab-git extension
 ### Might need to conda pip install from git to get latest version
@@ -384,6 +414,42 @@ RUN pip install git+https://github.com/jupyterlab/jupyterlab-git && \
     jupyter lab build
 ### End install jupyterlab-git
 
-COPY ./CAUTION.txt $HOME
+EXPOSE 8888
 
-CMD ["jupyterhub-singleuser"]
+
+# Configure container startup
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh"]
+
+# Copy local files as late as possible to avoid cache busting
+COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
+COPY jupyter_notebook_config.py /etc/jupyter/
+
+# Fix permissions on /etc/jupyter as root
+USER root
+RUN chmod +x /usr/local/bin/start-notebook.sh
+RUN fix-permissions /etc/jupyter/
+
+COPY ./CAUTION.txt /home/dspuser/
+
+# 7 JULY 2020 Additions - Added here to stop cache busting
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+                curl
+
+RUN conda install --quiet --yes \
+    'r-rstan' \
+    'r-tmb' 
+
+RUN R -e "r = getOption('repos'); \
+          r['CRAN'] = 'http://cran.us.r-project.org'; \
+          options(repos = r); \
+          install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/stable'), dep=TRUE);"
+
+
+
+# Switch back to jovyan to avoid accidental container runs as root
+USER $NB_UID
+
+WORKDIR $HOME
+
