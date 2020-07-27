@@ -1,0 +1,28 @@
+name: Build-Push
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to DockerHub Registry
+      run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+    - name: Get short SHA
+      id: vars
+      run: echo ::set-output name=sha_short::$(git rev-parse --short=4 ${{ github.sha }})
+    - name: Build the tagged Docker image
+      run: docker build . --file Dockerfile --tag cdasdsp/jupyterhub:$SHORTSHA
+      env:
+        SHORTSHA: ${{ steps.vars.outputs.sha_short }}
+    - name: Push the tagged Docker image
+      run: docker push cdasdsp/datasci-rstudio-notebook:${{steps.vars.outputs.sha_short}}
+    - name: Build the latest Docker image
+      run: docker build . --file Dockerfile --tag cdasdsp/datasci-rstudio-notebook:latest
+    - name: Push the latest Docker image
+      run: docker push cdasdsp/jupyterhub:latest
