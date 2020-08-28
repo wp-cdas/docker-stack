@@ -17,12 +17,12 @@ jobs:
       id: vars
       run: echo ::set-output name=sha_short::$(git rev-parse --short=4 ${{ github.sha }})
     - name: Build the tagged Docker image
-      run: docker build . --file Dockerfile --tag cdasdsp/jupyterhub:$SHORTSHA
+      run: docker build . --file Dockerfile --tag cdasdsp/datasci-rstudio-notebook:$SHORTSHA
       env:
         SHORTSHA: ${{ steps.vars.outputs.sha_short }}
     - name: Push the tagged Docker image
-      run: docker push cdasdsp/datasci-rstudio-notebook:${{steps.vars.outputs.sha_short}}
-    - name: Build the latest Docker image
-      run: docker build . --file Dockerfile --tag cdasdsp/datasci-rstudio-notebook:latest
-    - name: Push the latest Docker image
-      run: docker push cdasdsp/jupyterhub:latest
+      run: docker push cdasdsp/datasci-rstudio-notebook:$SHORTSHA
+      env:
+        SHORTSHA: ${{ steps.vars.outputs.sha_short }}
+
+
