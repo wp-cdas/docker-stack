@@ -446,7 +446,8 @@ RUN R -e "r = getOption('repos'); \
           options(repos = r); \
           install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/stable'), dep=TRUE);"
 
-
+RUN julia -e 'import Pkgl Pkg.update()' && \
+    julia -e -import Pkg; Pkg.add(["JuliaDB", "Plots", "Flux", "Genie", "JuMP", "Knet", "IterTools", "MLDatasets"])
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
