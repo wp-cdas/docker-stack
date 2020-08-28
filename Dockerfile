@@ -117,17 +117,6 @@ RUN conda install --quiet --yes \
     rm -rf /home/$NB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
-
-# Add local files as late as possible to avoid cache busting
-COPY start.sh /usr/local/bin/
-COPY start-notebook.sh /usr/local/bin/
-COPY start-singleuser.sh /usr/local/bin/
-COPY jupyter_notebook_config.py /etc/jupyter/
-
-# Fix permissions on /etc/jupyter as root
-USER root
-RUN fix-permissions /etc/jupyter/
-
 ### End jupyter/base-notebook
 
 ### Start jupyter/minimal-notebook
@@ -446,7 +435,8 @@ RUN R -e "r = getOption('repos'); \
           options(repos = r); \
           install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/stable'), dep=TRUE);"
 
-
+RUN julia -e 'import Pkg; Pkg.update()' && \
+    julia -e 'import Pkg; Pkg.add(["JuliaDB", "Plots", "Flux", "Genie", "JuMP", "Knet", "IterTools", "MLDatasets"])'
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
