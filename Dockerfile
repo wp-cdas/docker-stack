@@ -366,13 +366,11 @@ RUN apt-get clean && \
 
 USER $NB_USER
 
-RUN pip install git+https://github.com/jupyterhub/jupyter-rsession-proxy
-
-RUN cd /tmp/ && \
-    git clone --depth 1 https://github.com/jupyterhub/jupyter-server-proxy && \
-    cd jupyter-server-proxy/jupyterlab-server-proxy && \
-    npm install && npm run build && jupyter labextension link . && \
-    npm run build && jupyter lab build
+RUN conda install --quiet --yes \
+    jupyter-server-proxy \
+    jupyter-rsession-proxy && \
+    jupyter labextension install @jupyterlab/server-proxy && \
+    jupyter lab build
 
 # The desktop package uses /usr/lib/rstudio/bin
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
@@ -396,10 +394,7 @@ RUN conda install --quiet --yes \
 #### End install MATLAB kernel
 
 ### Install jupyterlab-git extension
-### Might need to conda pip install from git to get latest version
-#RUN conda install -c conda-forge jupyterlab-git && \
-    #jupyter lab build
-RUN pip install git+https://github.com/jupyterlab/jupyterlab-git && \
+RUN conda install --quiet --yes -c conda-forge jupyterlab-git && \
     jupyter lab build
 ### End install jupyterlab-git
 
