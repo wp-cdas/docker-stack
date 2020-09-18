@@ -1,7 +1,5 @@
 FROM cdasdsp/scipy-notebook:latest
 
-### Install tensorflow
-# Install Tensorflow
 USER $NB_UID
 
 RUN conda install --quiet --yes \
@@ -11,5 +9,3 @@ RUN conda install --quiet --yes \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
-
-## End install tensorflow

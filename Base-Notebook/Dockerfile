@@ -5,9 +5,6 @@ ARG NB_USER="dspuser"
 ARG NB_UID="1000"
 ARG NB_GID="100"
 
-ARG BASE_CONTAINER=$ROOT_CONTAINER
-FROM $BASE_CONTAINER
-
 # Fix DL4006
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

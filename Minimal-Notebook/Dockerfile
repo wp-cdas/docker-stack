@@ -3,7 +3,6 @@ FROM cdasdsp/tf-notebook:latest
 ### Start jupyter/minimal-notebook
 USER root
 
-
 # Install all OS dependencies for fully functional notebook server
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     build-essential \
