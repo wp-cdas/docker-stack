@@ -1,4 +1,4 @@
-FROM cdasdsp/tf-notebook:latest
+FROM cdasdsp/base-notebook:latest
 
 ### Start jupyter/minimal-notebook
 USER root
