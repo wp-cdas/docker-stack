@@ -1,4 +1,4 @@
-FROM cdasdsp/scipy-notebook:latest
+FROM cdasdsp/minimal-notebook:latest
 
 USER $NB_UID
 

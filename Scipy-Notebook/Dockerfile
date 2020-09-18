@@ -1,4 +1,4 @@
-FROM cdasdsp/minimal-notebook:latest
+FROM cdasdsp/tf-notebook:latest
 
 USER root
 
