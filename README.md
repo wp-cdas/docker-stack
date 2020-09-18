@@ -6,7 +6,7 @@ This stack is built in parts that roughly mirror the official stacks available f
 
  The order of stack goes:  
  -Base  
- -Minimal
+ -Minimal  
  -Scipy  
  -TF  
  -Datasci  
