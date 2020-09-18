@@ -1,4 +1,4 @@
-FROM cdasdsp/tf-notebook:latest
+FROM cdasdsp/scipy-notebook:latest
 
 ### Start jupyter/datascience-notebook
 
