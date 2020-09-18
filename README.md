@@ -1,14 +1,15 @@
 # docker-stacks
+
 JupyterLab Docker-Stack for DSP
 
 This stack is built in parts that roughly mirror the official stacks available from Jupyter. The difference is that this base stack is built off of a NVIDIA image that includes CUDA/CUDNN support. I've also added a few custom touches for the DSP.
 
  The order of stack goes:  
  -Base  
- -TF
- -Minimal  
+ -Minimal
  -Scipy  
- -Datasci 
+ -TF  
+ -Datasci  
 
 The final image is dictated by the Dockerfile in the top directory and is called: datasci-rstudio-notebook.
 
