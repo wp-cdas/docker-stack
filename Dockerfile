@@ -35,7 +35,7 @@ RUN conda install --quiet --yes \
 
 # The desktop package uses /usr/lib/rstudio/bin
 ENV PATH="${PATH}:/usr/lib/rstudio-server/bin"
-ENV LD_LIBRARY_PATH="/usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server:/opt/conda/lib/R/lib"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/lib:/usr/lib/x86_64-linux-gnu:/opt/conda/lib/R/lib"
 
 ### End install RStudio Server
 
@@ -86,7 +86,6 @@ RUN R -e "r = getOption('repos'); \
 RUN julia -e 'import Pkg; Pkg.update()' && \
     julia -e 'import Pkg; Pkg.add(["JuliaDB", "Plots", "Flux", "Genie", "JuMP", "Knet", "IterTools", "MLDatasets"])'
 
-# Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
 
 WORKDIR $HOME

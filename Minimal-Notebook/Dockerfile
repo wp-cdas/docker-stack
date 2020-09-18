@@ -1,4 +1,4 @@
-FROM cdasdsp/tf-notebook:latest
+FROM cdasdsp/base-notebook:latest
 
 ### Start jupyter/minimal-notebook
 USER root
@@ -21,14 +21,10 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     texlive-xetex \
     texlive-fonts-recommended \
     texlive-plain-generic \
-    # Optional dependency
-    texlive-fonts-extra \
     # ----
     tzdata \
     unzip \
     nano \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
-### End jupyter/minimal-notebook
