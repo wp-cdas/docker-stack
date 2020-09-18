@@ -6,9 +6,9 @@ This stack is built in parts that roughly mirror the official stacks available f
 
  The order of stack goes:  
  -Base  
- -TF
- -Minimal  
+ -Minimal
  -Scipy  
+ -TF  
  -Datasci  
 
 The final image is dictated by the Dockerfile in the top directory and is called: datasci-rstudio-notebook.

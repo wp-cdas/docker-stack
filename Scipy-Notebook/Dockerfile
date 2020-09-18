@@ -1,6 +1,5 @@
 FROM cdasdsp/minimal-notebook:latest
 
-### Start jupyter/scipy-notebook
 USER root
 
 # ffmpeg for matplotlib anim & dvipng for latex labels
@@ -12,35 +11,36 @@ USER $NB_UID
 
 # Install Python 3 packages
 RUN conda install --quiet --yes \
-    'beautifulsoup4' \
+    'beautifulsoup4=4.9.*' \
     'conda-forge::blas=*=openblas' \
-    'bokeh' \
-    'bottleneck' \
-    'cloudpickle' \
-    'cython' \
-    'dask' \
-    'dill' \
-    'h5py' \
-    'hdf5' \
-    'ipywidgets' \
-    'ipympl'\
-    'matplotlib-base' \
-    'numba' \
-    'numexpr' \
-    'pandas' \
-    'patsy' \
-    'protobuf' \
-    'pytables' \
-    'scikit-image' \
-    'scikit-learn' \
-    'scipy' \
-    'seaborn' \
-    'sqlalchemy' \
-    'statsmodels' \
-    'sympy' \
-    'vincent' \
-    'widgetsnbextension'\
-    'xlrd' \
+    'bokeh=2.1.*' \
+    'bottleneck=1.3.*' \
+    'cloudpickle=1.5.*' \
+    'cython=0.29.*' \
+    'dask=2.20.*' \
+    'dill=0.3.*' \
+    'h5py=2.10.*' \
+    'hdf5=1.10.*' \
+    'ipywidgets=7.5.*' \
+    'ipympl=0.5.*'\
+    'matplotlib-base=3.2.*' \
+    # numba update to 0.49 fails resolving deps.
+    'numba=0.48.*' \
+    'numexpr=2.7.*' \
+    'pandas=1.1.*' \
+    'patsy=0.5.*' \
+    'protobuf=3.12.*' \
+    'pytables=3.6.*' \
+    'scikit-image=0.17.*' \
+    'scikit-learn=0.23.*' \
+    'scipy=1.5.*' \
+    'seaborn=0.10.*' \
+    'sqlalchemy=1.3.*' \
+    'statsmodels=0.11.*' \
+    'sympy=1.6.*' \
+    'vincent=0.4.*' \
+    'widgetsnbextension=3.5.*'\
+    'xlrd=1.2.*' \
     && \
     conda clean --all -f -y && \
     # Activate ipywidgets extension in the environment that runs the notebook server
