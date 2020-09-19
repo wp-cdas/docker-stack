@@ -1,4 +1,4 @@
-FROM cdasdsp/minimal-notebook:latest
+FROM cdasdsp/minimal-notebook:tf-base
 
 USER $NB_UID
 

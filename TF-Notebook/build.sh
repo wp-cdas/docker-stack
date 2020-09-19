@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker build -t cdasdsp/tf-notebook:latest .
-docker push cdasdsp/tf-notebook:latest
+docker build -t cdasdsp/tf-notebook:tf-base .
+docker push cdasdsp/tf-notebook:tf-base
