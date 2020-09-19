@@ -1,4 +1,4 @@
-FROM cdasdsp/minimal-notebook:latest
+FROM cdasdsp/minimal-notebook:cuda-11
 
 USER $NB_UID
 
