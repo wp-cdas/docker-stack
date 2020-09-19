@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
+FROM tensorflow/tensorflow:2.3.0-gpu
 
 ### Start jupyter/base-notebook
 ARG NB_USER="dspuser"
