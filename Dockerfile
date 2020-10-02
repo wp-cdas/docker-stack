@@ -86,6 +86,14 @@ RUN R -e "r = getOption('repos'); \
 RUN julia -e 'import Pkg; Pkg.update()' && \
     julia -e 'import Pkg; Pkg.add(["JuliaDB", "Plots", "Flux", "Genie", "JuMP", "Knet", "IterTools", "MLDatasets"])'
 
+RUN conda install --quiet --yes \
+    'GDAL' \
+    'rasterio' \
+    'opencv' \
+    'dask-ml' \
+    'h2o' \
+    'h2o-py'
+
 USER $NB_UID
 
 WORKDIR $HOME
