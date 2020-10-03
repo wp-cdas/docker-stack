@@ -52,16 +52,6 @@ RUN conda install --quiet --yes -c conda-forge jupyterlab-git && \
     jupyter lab build
 ### End install jupyterlab-git
 
-EXPOSE 8888
-
-# Configure container startup
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.sh"]
-
-# Copy local files as late as possible to avoid cache busting
-COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
-COPY jupyter_notebook_config.py /etc/jupyter/
-
 # Fix permissions on /etc/jupyter as root
 USER root
 RUN chmod +x /usr/local/bin/start-notebook.sh
@@ -101,6 +91,17 @@ RUN conda install --quiet --yes \
     fix-permissions /home/$NB_USER
 
 USER $NB_UID
+
 COPY ./CAUTION.txt /home/dspuser/
+
 WORKDIR $HOME
 
+EXPOSE 8888
+
+# Copy local files as late as possible to avoid cache busting
+COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
+COPY jupyter_notebook_config.py /etc/jupyter/
+
+# Configure container startup
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh"]
