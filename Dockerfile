@@ -67,8 +67,6 @@ USER root
 RUN chmod +x /usr/local/bin/start-notebook.sh
 RUN fix-permissions /etc/jupyter/
 
-COPY ./CAUTION.txt /home/dspuser/
-
 # 7 JULY 2020 Additions - Added here to stop cache busting
 RUN apt-get update && \
         apt-get install -y --no-install-recommends \
@@ -103,6 +101,6 @@ RUN conda install --quiet --yes \
     fix-permissions /home/$NB_USER
 
 USER $NB_UID
-
+COPY ./CAUTION.txt /home/dspuser/
 WORKDIR $HOME
 
