@@ -21,9 +21,12 @@ RUN wget -q http://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG}
 RUN dpkg -i ${RSTUDIO_PKG}
 RUN rm ${RSTUDIO_PKG}
 
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+                curl
+
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
 
 USER $NB_USER
 
@@ -51,13 +54,6 @@ RUN conda install --quiet --yes \
 RUN conda install --quiet --yes -c conda-forge jupyterlab-git && \
     jupyter lab build
 ### End install jupyterlab-git
-
-# 7 JULY 2020 Additions - Added here to stop cache busting
-RUN apt-get update && \
-        apt-get install -y --no-install-recommends \
-                curl
-
-USER $NB_USER
 
 RUN conda install --quiet --yes \
     'r-rstan' \
