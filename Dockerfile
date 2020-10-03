@@ -76,7 +76,10 @@ RUN apt-get update && \
 
 RUN conda install --quiet --yes \
     'r-rstan' \
-    'r-tmb' 
+    'r-tmb'  && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
 
 RUN R -e "r = getOption('repos'); \
           r['CRAN'] = 'http://cran.us.r-project.org'; \
@@ -92,7 +95,10 @@ RUN conda install --quiet --yes \
     'opencv' \
     'dask-ml' \
     'h2o' \
-    'h2o-py'
+    'h2o-py' && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
 
 USER $NB_UID
 
