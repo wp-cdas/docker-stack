@@ -74,6 +74,8 @@ RUN apt-get update && \
         apt-get install -y --no-install-recommends \
                 curl
 
+USER $NB_USER
+
 RUN conda install --quiet --yes \
     'r-rstan' \
     'r-tmb'  && \
