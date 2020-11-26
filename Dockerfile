@@ -88,6 +88,11 @@ RUN pip3 install \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
 
+RUN conda install -y \
+    'imgaug' \
+    'albumentations' && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
 
 # Copy local files as late as possible to avoid cache busting
 COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
