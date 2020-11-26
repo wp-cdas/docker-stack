@@ -21,9 +21,12 @@ RUN wget -q http://download2.rstudio.org/server/bionic/amd64/${RSTUDIO_PKG}
 RUN dpkg -i ${RSTUDIO_PKG}
 RUN rm ${RSTUDIO_PKG}
 
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+                curl
+
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
 
 USER $NB_USER
 
@@ -52,31 +55,12 @@ RUN conda install --quiet --yes -c conda-forge jupyterlab-git && \
     jupyter lab build
 ### End install jupyterlab-git
 
-EXPOSE 8888
-
-# Configure container startup
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.sh"]
-
-# Copy local files as late as possible to avoid cache busting
-COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
-COPY jupyter_notebook_config.py /etc/jupyter/
-
-# Fix permissions on /etc/jupyter as root
-USER root
-RUN chmod +x /usr/local/bin/start-notebook.sh
-RUN fix-permissions /etc/jupyter/
-
-COPY ./CAUTION.txt /home/dspuser/
-
-# 7 JULY 2020 Additions - Added here to stop cache busting
-RUN apt-get update && \
-        apt-get install -y --no-install-recommends \
-                curl
-
 RUN conda install --quiet --yes \
     'r-rstan' \
-    'r-tmb' 
+    'r-tmb'  && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
 
 RUN R -e "r = getOption('repos'); \
           r['CRAN'] = 'http://cran.us.r-project.org'; \
@@ -92,9 +76,41 @@ RUN conda install --quiet --yes \
     'opencv' \
     'dask-ml' \
     'h2o' \
-    'h2o-py'
+    'h2o-py' && \
+    conda clean --all -f -y && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+RUN pip3 install \
+    'torch' \
+    'torchvision' \
+    'dominate' && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+RUN conda install -y \
+    'imgaug' \
+    'albumentations' && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+# Copy local files as late as possible to avoid cache busting
+COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
+COPY jupyter_notebook_config.py /etc/jupyter/
+# Fix permissions on /etc/jupyter as root
+USER root
+RUN chmod +x /usr/local/bin/start-notebook.sh
+RUN fix-permissions /etc/jupyter/
 
 USER $NB_UID
 
+COPY ./CAUTION.txt /home/dspuser/
+
 WORKDIR $HOME
+
+EXPOSE 8888
+
+# Configure container startup
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh"]
 

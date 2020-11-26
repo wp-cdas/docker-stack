@@ -3,3 +3,4 @@ Version 4 as of 24 Jan
 Version 5 as of 23 Jun (Update all package numbers)
 Version 6 as of 7 July (Install RSTAN, TMB, and INLA packages for R)
 Version 7 - 17 Sep - Testing number
+Version 8 - Removed kernel timeout
