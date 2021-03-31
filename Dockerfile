@@ -19,7 +19,7 @@ RUN chmod +x /usr/local/bin/start-notebook.sh
 RUN fix-permissions /etc/jupyter/
 
 #Be a good GPU neighbor
-RUN export TF_FORCE_GPU_ALLOW_GROWTH=TRUE
+ENV TF_FORCE_GPU_ALLOW_GROWTH=TRUE
 
 USER $NB_UID
 
