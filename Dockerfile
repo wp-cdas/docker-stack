@@ -1,5 +1,13 @@
 FROM cdasdsp/datasci-rstudio-notebook:latest
 
+USER root
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+                htop
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy local files as late as possible to avoid cache busting
 COPY start.sh start-notebook.sh start-singleuser.sh /usr/local/bin/
 COPY jupyter_notebook_config.py /etc/jupyter/
